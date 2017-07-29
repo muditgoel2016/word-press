@@ -1,0 +1,25 @@
+
+Procedure:-
+
+Install BackWPup plugin on "migrating from" WP server in the wp-admin console.
+Get a tar.gz or tar.gzip file backup and download it to your local.
+Install a Bitnami WordPress instance ("the migrating to" server) in your desired environment (AWS).
+For AWS--
+                     Login into AWS. Goto EC2. Click Launch Instance. Select AWS Marketplace in left pane.
+Search for Bitnami (Choose free tier eligible, the first one, from the search results (for demo, testing etc.))
+Next select the free tier eligible, t2.micro, second checkbox from the ensuing checkbox listing. Click Review and Launch. 
+Then click Launch. Wait for a few minutes before the instance is up and running. 
+Next goto AWS > EC2> Instances and mark the checkbox against the instance you just created. Click the "usage instruction" tab down below and search for the line "The default server administrator is 'user'." This is your Bitnami WordPress wp-admin username (goto <BitnamiAWSInstancePublicIp>/wp-admin.). 
+For password, got to Actions (button-dropdown) > Instance settings > Get system log. In the opening dialouge, scroll down and search for the line "Setting Bitnami application password to  <password>" enclosed in a rectangle made of #. Take password from here.
+Bitnami mysql database username is root and password is same as application password.
+Next ssh into Bitnami instance ( ssh -i <path to the instance's pem file> bitnami@<BitnamiAWSPublicDNS>).
+cd to /apps/wordpress/htdocs/
+Delete everything inside it.
+Upload the backed-up tar file in this folder itself. ( scp -i <path to the instance's pem file> backup_file_path server_path(bitnami@<BitnamiAWSPublicDNS>:~/apps/wordpress/htdocs/)
+Extract the tar.gz here with sudo tar -xzvf backup.tar.gz
+Restore the database tables with mysql -u root -p DATABASE_NAME < backup.sql.  Password is a we found before. Database name would be something bitnami_wordpress; you can find it out from your mysql console itself ( Do mysql -u root -p<pwd> then show databases)
+Logout of your mysql console then type sudo vim /opt/bitnami/apps/wordpress/htdocs/wp-config.php
+Change the mysql username to root and password to as found before in the file; save and exit.
+Restart the mysql server with sudo /opt/bitnami/ctlscript.sh restart mysql
+Restart the application server with sudo /opt/bitnami/ctlscript.sh restart
+This completes your sites migration except for domain pointing.
